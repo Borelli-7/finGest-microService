@@ -1,0 +1,66 @@
+monagemoney exigence fonctionnnel 
+
+On souhaite créer une application web et mobile qui permet de gerer les revenus et les depenses personnel 
+
+- l'application devra enregistrer des transactions dans une semaine et un mois bien précis. 
+
+- chaque transaction est caractérisé par son id, ça description, le montant, la semaine, le mois, et l'année dans laquelle il a été éffectué
+
+- on a trois type de transactions: 
+	revenus (income)
+	charge fixe (fixed outcome)
+	charge variable (variable outcome)
+	
+- l'application devra informer en temps réel pour un mois donneé: 
+		le montant total de revenus 
+		le montant total de depenses 
+		le montant total des epargnes ( epargne = revenus - depenses )
+		le montant total d'une transaction précise durant le mois 
+		le montant total des transactions effectués durant une semaine précise
+		
+- L'application devra fournir une vue global de l'année en fournissant un tableau constitué des montant total de revenu, charge, et épargne pour chaque mois( janvier à decembre) et fournir aussi la somme total des différentes type de transaction au cour de l'année
+
+- l'application devra aussi fournir un graphique pour mieu expliquer de façon visuel les différentes transaction pour chaque mois ainsi que les différents montants.
+
+
+//////////////////Gestion des 6 comptes d'argent /////////////////
+
+- l'application devra distribuer la somme total de revenu mensuel dans chacun des 6 comptes en fonction du pourcentage appliqué sur chacun des comptes.
+
+- la somme des pourcentage appliqué sur les 6 comptes devra etre strictement egal à 100. Et on doit etre capable de modifier les pourcentage sur chaque compte à volonté. 
+
+- le système devra calculer de façon automatique et dans chaque compte, la somme total d'argent reçu par mois. 
+
+- Dans le compte Formation, Loisir et Don, le système devra permetre le retrait d'une somme d'argent pour un mois donné dont le montant devra etre strictement inférieur au solde actuel du comptes. (solde= total reçu - total retirer )
+
+- Le systeme devra calculer de façon automatique la somme total des soldes de comptes ( excepter celui du comptes basique qui sera utilisé pour les dépenses de charges fixe et variable du mois suivant ) 
+
+- Le système ne devra pas permetre le retrait d'argent dans le compte épargne sauf en cas d'extrème necessité
+
+- le retrait d'argent dans le compte liberté financière sera gérer dans le service gestion des actifs et passif 
+
+- le compte est caractérisé par son numéro, son libellé, son pourcentage, le mois, l'année
+
+- le systeme devra fournir un graphique de camemberg montrant le soldes de chaque comptes
+
+
+//////////////////////// Gestion des notification ///////////////////
+
+- le systeme devra notifier l'utilisateur lorsque la somme des charges( fixe et variable) du mois en cour est supérieur au solde du comptes du basique du mois précedents
+
+- le systeme devra notifier l'utilisateur  lorsque l'epargne de la semaine préceédentes ou du mois précedents est negative
+
+- le systeme devra notifier l'utilisateur lorsque la balance du service gestion des actifs et passifs change de signe  
+
+
+///////////////////////////// gestion des actifs et passifs ////////////
+
+- le système devra fournir le soldes des comptes( excepter celui du compte basique ), le montant total d'argent reçu dans le compte liberté financière et son solde courant
+
+- le systeme devra calculer de façon automatique la balance entre les revenus issuent des actifs et les dépenses issuent des passifs
+
+//////////////// résumé de l'année //////////////
+
+
+
+		

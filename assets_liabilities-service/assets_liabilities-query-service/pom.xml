@@ -4,29 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.kaly7dev</groupId>
-		<artifactId>managemoney</artifactId>
+		<artifactId>assets_liabilities-service</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<packaging>pom</packaging>
-	<modules>
-		<module>managemoney-command-service</module>
-		<module>managemoney-query-service</module>
-	</modules>
-	<artifactId>managemoney-service</artifactId>
+
+	<artifactId>assets_liabilities-query-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>managemoney-service</name>
-	<description>Demo project for Spring Boot</description>
+	<name>assets_liabilities-query-service</name>
+	<description>module for assets_liabilities-query-service</description>
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
 	<dependencies>
 
-		<dependency>
-			<groupId>com.kaly7dev</groupId>
-			<artifactId>managemoney-core-api</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

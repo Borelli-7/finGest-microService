@@ -5,6 +5,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>managemoney-core-api</module>
+		<module>managemoney-service</module>
     </modules>
     <parent>
 		<groupId>org.springframework.boot</groupId>
