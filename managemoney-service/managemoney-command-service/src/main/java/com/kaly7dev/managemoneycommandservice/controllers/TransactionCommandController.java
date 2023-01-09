@@ -26,6 +26,7 @@ public class TransactionCommandController {
     private CommandGateway commandGateway;
     private EventStore eventStore;
 
+/*
     private String serverPort;
     private String value;
 
@@ -33,7 +34,7 @@ public class TransactionCommandController {
     public TransactionCommandController(@Value("${server.port}") String serverPort, @Value("${value}") String value ) {
         this.serverPort = serverPort;
         this.value = value;
-    }
+    }*/
 
 
     @PostMapping("/create")
@@ -54,12 +55,12 @@ public class TransactionCommandController {
 
 
 
-    @GetMapping("/myconfig")
+/*    @GetMapping("/myconfig")
     public Map<String, Object> myConfig(){
         Map<String, Object> params = new HashMap< >();
         params.put("server.port", serverPort);
         params.put("value", value);
         params.put("threadName", Thread.currentThread().getName());
         return params;
-    }
+    }*/
 }
