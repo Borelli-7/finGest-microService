@@ -27,15 +27,16 @@ public class ResultControllerRestAPiImpl implements ResultController {
 
     @Override
     @PutMapping("/update")
-    public ResultDto updateResult(@RequestBody ResultDto resultDto) {
-        return resultService.updateResult(resultDto);
+    public ResponseEntity<ResultDto> updateResult(@RequestBody ResultDto resultDto) {
+        return status(OK)
+                .body(resultService.updateResult(resultDto));
     }
 
     @Override
     @DeleteMapping("/delete/{resultID}")
-    public ResponseEntity<Void> deleteResult(@PathVariable Long resultID) {
-        resultService.deleteResult(resultID);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<String> deleteResult(@PathVariable Long resultID) {
+        return status(OK)
+                .body(resultService.deleteResult(resultID));
     }
 
     @Override

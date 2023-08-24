@@ -54,12 +54,13 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
-    public void deleteResult(Long resultID) {
+    public String deleteResult(Long resultID) {
         Result findedResult= findById(resultID);
 
         resultRepo.deleteById(findedResult.getResultID());
 
         log.info("Result Successfully Deleted !");
+        return "Result Successfully Deleted !";
     }
 
     @Override

@@ -7,9 +7,8 @@ import java.util.List;
 
 public interface ResultController {
     ResponseEntity<ResultDto> createResult(ResultDto resultDto);
-    ResultDto updateResult(ResultDto resultDto);
-    ResponseEntity<Void> deleteResult(Long resultID);
+    ResponseEntity<ResultDto> updateResult(ResultDto resultDto);
+    ResponseEntity<String> deleteResult(Long resultID);
     ResponseEntity<List<ResultDto>> listResults(boolean isInflow, boolean isFixedOutflow);
-
     ResponseEntity<ResultDto> getResultById(Long resultID);
 }

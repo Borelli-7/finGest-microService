@@ -2,35 +2,34 @@ package com.kaly7dev.results.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kaly7dev.results.dtos.ResultDto;
-import com.kaly7dev.results.entities.Result;
-import com.kaly7dev.results.mappers.ResultMapper;
-import com.kaly7dev.results.repositories.ResultRepo;
 import com.kaly7dev.results.services.ResultService;
+import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 
 import static java.util.Arrays.asList;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = ResultControllerRestAPiImpl.class)
 class ResultControllerRestAPiImplTest {
     @MockBean
     private ResultService resultService;
-
     @Autowired
     private MockMvc mockMvc;
+    private static ObjectMapper mapper = new ObjectMapper();
+
     @Test
     @DisplayName("Should list all results when making Get resquest to endpoint -" +
             " /api/result/getlist/inflow={inflow}andfixedOutflow={fixedOutflow}\" ")
@@ -60,28 +59,55 @@ class ResultControllerRestAPiImplTest {
     @Test
     @DisplayName("Should Return resultDto created !" )
     void testCreateResult() throws Exception {
-/*        ResultDto expectedResultDto= new ResultDto(
-                1L, "test retrieve result", BigDecimal.valueOf(1000), Instant.now(),
-                null, false, 20, true);
         ResultDto resultDto= new ResultDto(
-                0L, "test retrieve result", BigDecimal.valueOf(1000), null,
-                null, false, 20, true);
+                1L, "test retrieve result1", BigDecimal.valueOf(1000), null,
+                null, false, 34, true);
 
-*//*        Mockito.when(resultService.createResult(resultDto))
-                .thenReturn(expectedResultDto);*//*
+        Mockito.when(resultService.createResult(ArgumentMatchers.any(ResultDto.class)))
+                .thenReturn(resultDto);
+        String json= mapper.writeValueAsString(resultDto);
 
-        mockMvc.perform(post("/api/result/create"))
-                .andExpect(content()
-                        .json(asJsonString(resultDto)))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(201));*/
-
+        mockMvc.perform(post("/api/result/create").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+                        .content(json).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resultID", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.description", Matchers.equalTo("test retrieve result1")));
     }
-    public static String asJsonString(final Object obj) {
-        try {
-            return new ObjectMapper().writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    @Test
+    @DisplayName("should return resultDto updated ! ")
+    void testUpdateResult() throws Exception{
+        ResultDto resultDto= new ResultDto(
+                1L, "test retrieve result1", BigDecimal.valueOf(12000), null,
+                null, false, 34, true);
+
+        Mockito.when(resultService.updateResult(ArgumentMatchers.any(ResultDto.class)))
+                .thenReturn(resultDto);
+        String json= mapper.writeValueAsString(resultDto);
+
+        mockMvc.perform(put("/api/result/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("utf-8")
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultID", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.amount", Matchers.equalTo(12000)));
+    }
+
+    @Test
+    void testDeleteResult() throws Exception{
+        Mockito.when(resultService.deleteResult(ArgumentMatchers.anyLong()))
+                .thenReturn("Result Successfully Deleted !");
+
+        //mockMvc.perform(delete("/api/result/delete").param("resultID", "1")) // if I used @RequestParam on resultcontroller
+        MvcResult requestResult= mockMvc.perform(delete("/api/result/delete/1"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+                String resultString= requestResult.getResponse()
+                        .getContentAsString();
+
+        Assertions.assertThat(resultString)
+                .isEqualTo("Result Successfully Deleted !");
     }
 }

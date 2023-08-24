@@ -10,7 +10,7 @@ public interface ResultService {
 
     ResultDto updateResult(ResultDto resultDto);
 
-    void deleteResult(Long resultID);
+    String deleteResult(Long resultID);
 
     ResultDto getResultById(Long resultID);
 
