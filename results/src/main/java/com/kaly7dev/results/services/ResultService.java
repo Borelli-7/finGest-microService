@@ -2,7 +2,7 @@ package com.kaly7dev.results.services;
 
 import com.kaly7dev.results.dtos.ResultDto;
 
-import java.util.List;
+import java.util.Map;
 
 public interface ResultService {
 
@@ -14,5 +14,10 @@ public interface ResultService {
 
     ResultDto getResultById(Long resultID);
 
-    List<ResultDto> listResults(boolean isInflow, boolean isFixedOutflow);
+    Map< String, Object> listResults(boolean isInflow,
+                                      boolean isFixedOutflow,
+                                      String desc,
+                                      int weekNumber,
+                                      int page,
+                                      int size);
 }

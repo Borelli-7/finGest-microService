@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
@@ -40,18 +40,30 @@ public class ResultControllerRestAPiImpl implements ResultController {
     }
 
     @Override
-    @GetMapping("/getlist/inflow={inflow}andfixedOutflow={fixedOutflow}")
-    public ResponseEntity<List<ResultDto>> listResults(
-            @PathVariable boolean inflow,
-            @PathVariable boolean fixedOutflow
-    ) {
-        return status(OK).body(resultService.listResults(inflow, fixedOutflow));
-    }
-
-    @Override
     @GetMapping("/findbyid/{resultID}")
     public ResponseEntity<ResultDto> getResultById(@PathVariable Long resultID) {
         return status(HttpStatus.OK).body(resultService.getResultById(resultID));
+    }
+
+    @Override
+    @GetMapping("/getlist/{inflow}and{fixedOutflow}")
+    public ResponseEntity<Map<String, Object>> listResults(
+            @PathVariable boolean inflow,
+            @PathVariable boolean fixedOutflow,
+            @RequestParam(required = false) String desc,
+            @RequestParam(defaultValue = "0") int weekNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size) {
+
+        try {
+
+            return status(OK)
+                    .body(resultService.listResults(
+                            inflow, fixedOutflow, desc, weekNumber, page, size));
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     @ExceptionHandler(Exception.class)
