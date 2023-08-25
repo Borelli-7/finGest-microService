@@ -8,6 +8,7 @@ import com.kaly7dev.results.repositories.ResultRepo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ public class ResultServiceImpl implements ResultService {
     private static final String ID_NOT_FOUND = "Result ID not found In DataBase !";
 
     @Override
+    @Transactional
     public ResultDto createResult( ResultDto resultDto) {
         Result resultToSave= resultMapper.mapToResult(resultDto);
 
@@ -38,6 +40,7 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    @Transactional
     public ResultDto updateResult(ResultDto resultDto) {
         Result findedResult= findById(resultDto.resultID());
 
@@ -54,6 +57,7 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    @Transactional
     public String deleteResult(Long resultID) {
         Result findedResult= findById(resultID);
 
@@ -64,6 +68,7 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResultDto getResultById(Long resultID) {
         Result findedResult= findById(resultID);
 
@@ -74,36 +79,49 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResultDto> listResults(boolean isInflow, boolean isFixedOutflow) {
         if (isInflow){
-            List<ResultDto> inflowList= resultRepo.findAll()
-                                .parallelStream()
-                                .filter(Result::isInFlow)
-                                .map(resultMapper::mapToDto)
-                                .toList();
-            log.info("Results Inflows successfully listed ! ");
-            return inflowList;
+            return getDtosInflowList();
 
         } else if (isFixedOutflow) {
-            List<ResultDto> fixedOuFlowsList= resultRepo.findAll()
-                                .parallelStream()
-                                .filter(result -> (!result.isInFlow() && result.isFixedOutflow()))
-                                .map(resultMapper::mapToDto)
-                                .toList();
-
-            log.info("Results Fixed Outflows successfully listed ! ");
-            return fixedOuFlowsList;
+            return getDtosFixedOutFlowList();
         }else {
-            List<ResultDto> variableOuFlowsList= resultRepo.findAll()
-                                .parallelStream()
-                                .filter(result -> (!result.isInFlow() && !result.isFixedOutflow()))
-                                .map(resultMapper::mapToDto)
-                                .toList();
-
-            log.info("Results Variables Outflows successfully listed ! ");
-            return variableOuFlowsList;
+            return getDtosVariableOutFlowList();
         }
 
+    }
+
+    private List<ResultDto> getDtosVariableOutFlowList() {
+        List<ResultDto> variableOuFlowsList= resultRepo.findAll()
+                            .parallelStream()
+                            .filter(result -> (!result.isInFlow() && !result.isFixedOutflow()))
+                            .map(resultMapper::mapToDto)
+                            .toList();
+
+        log.info("Results Variables Outflows successfully listed ! ");
+        return variableOuFlowsList;
+    }
+
+    private List<ResultDto> getDtosFixedOutFlowList() {
+        List<ResultDto> fixedOuFlowsList= resultRepo.findAll()
+                            .parallelStream()
+                            .filter(result -> (!result.isInFlow() && result.isFixedOutflow()))
+                            .map(resultMapper::mapToDto)
+                            .toList();
+
+        log.info("Results Fixed Outflows successfully listed ! ");
+        return fixedOuFlowsList;
+    }
+
+    private List<ResultDto> getDtosInflowList() {
+        List<ResultDto> inflowList= resultRepo.findAll()
+                            .parallelStream()
+                            .filter(Result::isInFlow)
+                            .map(resultMapper::mapToDto)
+                            .toList();
+        log.info("Results Inflows successfully listed ! ");
+        return inflowList;
     }
 
     private int getWeekNumber(){
