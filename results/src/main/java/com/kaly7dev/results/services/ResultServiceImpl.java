@@ -83,8 +83,21 @@ public class ResultServiceImpl implements ResultService {
         return resultDtoSaved;
     }
 
-
+    /**
+     *
+     * @param isInflow
+     * @param isFixedOutflow
+     * @param desc
+     * @param weekNumber
+     * @param page
+     * @param size
+     * @return response
+     *
+        This function returns either the list of inflows or the list of outflows and,
+        if necessary, searches these different lists by description or by week number.
+     */
     @Override
+    @Transactional(readOnly = true)
     public Map< String, Object> listResults(boolean isInflow,
                                              boolean isFixedOutflow,
                                              String desc,
@@ -98,7 +111,7 @@ public class ResultServiceImpl implements ResultService {
 
         List<Result> resultList= pageResultList.getContent();
 
-            List<ResultDto> resultDtoList= getListResults(isInflow, isFixedOutflow, resultList);
+            List<ResultDto> resultDtoList= selectListResultsType(isInflow, isFixedOutflow, resultList);
 
             Map< String, Object> response= new HashMap<>();
             response.put("results List", resultDtoList);
@@ -109,7 +122,16 @@ public class ResultServiceImpl implements ResultService {
             return response;
     }
 
-    private Page<Result> selectSearchFunction(String desc, int weekNumber, Pageable paging) {
+    /**
+     *
+     * @param desc
+     * @param weekNumber
+     * @param paging
+     * @return pageResultList
+     *
+     * selects the search function to be executed according to the description and/or week number fields entered.
+     */
+    public Page<Result> selectSearchFunction(String desc, int weekNumber, Pageable paging) {
         Page<Result> pageResultList;
         if ((desc != null) && (weekNumber != 0) ){
             pageResultList= resultRepo.findByDescriptionAndWeekNumber(desc, weekNumber, paging);
@@ -125,6 +147,13 @@ public class ResultServiceImpl implements ResultService {
         return pageResultList;
     }
 
+    /**
+     *
+     * @param resultList
+     * @return variableOuFlowsList
+     *
+     * filters the list of results to return only the variable output
+     */
     private List<ResultDto> getDtosVariableOutFlowList(List<Result> resultList) {
         List<ResultDto> variableOuFlowsList= resultList.parallelStream()
                             .filter(result -> (!result.isInFlow() && !result.isFixedOutflow()))
@@ -135,6 +164,13 @@ public class ResultServiceImpl implements ResultService {
         return variableOuFlowsList;
     }
 
+    /**
+     *
+     * @param resultList
+     * @return fixedOuFlowsList
+     *
+     * filters the result list to return only the fixed output
+     */
     private List<ResultDto> getDtosFixedOutFlowList(List<Result> resultList) {
         List<ResultDto> fixedOuFlowsList= resultList.parallelStream()
                             .filter(result -> (!result.isInFlow() && result.isFixedOutflow()))
@@ -145,6 +181,13 @@ public class ResultServiceImpl implements ResultService {
         return fixedOuFlowsList;
     }
 
+    /**
+     *
+     * @param resultList
+     * @return inflowList
+     *
+     * filters the results list to return only the list of entries
+     */
     private List<ResultDto> getDtosInflowList(List<Result> resultList) {
         List<ResultDto> inflowList= resultList.parallelStream()
                             .filter(Result::isInFlow)
@@ -154,7 +197,17 @@ public class ResultServiceImpl implements ResultService {
         return inflowList;
     }
 
-    private List<ResultDto> getListResults(
+    /**
+     *
+     * @param isInflow
+     * @param isFixedOutflow
+     * @param resultList
+     * @return resultList
+     *
+     * selects the function that will return either the list of inputs,
+     * the list of fixed outputs or the list of variable outputs.
+     */
+    private List<ResultDto> selectListResultsType(
             boolean isInflow,
             boolean isFixedOutflow,
             List<Result> resultList) {

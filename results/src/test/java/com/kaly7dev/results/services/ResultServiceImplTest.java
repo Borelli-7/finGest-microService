@@ -13,12 +13,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -117,27 +122,29 @@ class ResultServiceImplTest {
     @DisplayName("Should list only the Fixed Outflow results ! ")
     void testListFixedOutFlowResults() {
         Result result1= new Result(
-                123L, "test retrieve result", BigDecimal.valueOf(1000), null,
+                123L, "result", BigDecimal.valueOf(1000), null,
                 null, false, 34, true);
         ResultDto resultDto= new ResultDto(
-                123L, "test retrieve result", BigDecimal.valueOf(1000), null,
+                123L, "resultdto", BigDecimal.valueOf(1000), null,
                 null, false, 34, true);
 
         List<Result> resultList= new ArrayList<>();
         resultList.add(result1);
         List<ResultDto> expectedResultDtoList= new ArrayList<>();
         expectedResultDtoList.add(resultDto);
+        Pageable paging= PageRequest.of(0, 3);
+        Page<Result> pageResultList= new PageImpl<>(resultList);
 
-        Mockito.when(resultRepo.findAll())
-                        .thenReturn(resultList);
+
+        Mockito.when(resultService.selectSearchFunction("result", 34, paging))
+                        .thenReturn(pageResultList);
         Mockito.when(resultMapper.mapToDto(Mockito.any(Result.class)))
                         .thenReturn(resultDto);
 
-        List<ResultDto> actualResultDtoList=
-                resultService.listResults(false,true);
+        Map<String, Object> actualResultDtoMap=
+                resultService.listResults(false,true,"result", 34, 0, 3 );
 
-        Assertions.assertThat(actualResultDtoList.contains(resultDto))
-                .isEqualTo(expectedResultDtoList.contains(resultDto));
+        Assertions.assertThat(actualResultDtoMap).containsValue(expectedResultDtoList);
     }
 
     @Test
@@ -154,17 +161,20 @@ class ResultServiceImplTest {
         resultList.add(result1);
         List<ResultDto> expectedResultDtoList= new ArrayList<>();
         expectedResultDtoList.add(resultDto);
+        Pageable paging= PageRequest.of(0, 3);
+        Page<Result> pageResultList= new PageImpl<>(resultList);
 
-        Mockito.when(resultRepo.findAll())
-                .thenReturn(resultList);
+        Mockito.when(resultService.selectSearchFunction("test retrieve result", 34, paging))
+                .thenReturn(pageResultList);
         Mockito.when(resultMapper.mapToDto(Mockito.any(Result.class)))
                 .thenReturn(resultDto);
 
-        List<ResultDto> actualInflowResultDtoList=
-                resultService.listResults(true,false);
+       Map<String, Object> actualInflowResultDtoList=
+                resultService.listResults(
+                        true,false, "test retrieve result", 34,0, 3);
 
-        Assertions.assertThat(actualInflowResultDtoList.contains(resultDto))
-                .isEqualTo(expectedResultDtoList.contains(resultDto));
+        Assertions.assertThat(actualInflowResultDtoList).containsValue(expectedResultDtoList);
+
     }
 
     @Test
@@ -181,16 +191,18 @@ class ResultServiceImplTest {
         resultList.add(result1);
         List<ResultDto> expectedResultDtoList= new ArrayList<>();
         expectedResultDtoList.add(resultDto);
+        Pageable paging= PageRequest.of(0, 3);
+        Page<Result> pageResultList= new PageImpl<>(resultList);
 
-        Mockito.when(resultRepo.findAll())
-                .thenReturn(resultList);
+        Mockito.when(resultService.selectSearchFunction("test retrieve result", 34, paging))
+                .thenReturn(pageResultList);
         Mockito.when(resultMapper.mapToDto(Mockito.any(Result.class)))
                 .thenReturn(resultDto);
 
-        List<ResultDto> actualInflowResultDtoList=
-                resultService.listResults(false,false);
+        Map<String, Object> actualInflowResultDtoMap=
+                resultService.listResults(
+                        false,false, "test retrieve result", 34,0, 3);
 
-        Assertions.assertThat(actualInflowResultDtoList.contains(resultDto))
-                .isEqualTo(expectedResultDtoList.contains(resultDto));
+        Assertions.assertThat(actualInflowResultDtoMap).containsValue(expectedResultDtoList);
     }
 }

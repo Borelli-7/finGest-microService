@@ -1,6 +1,9 @@
 package com.kaly7dev.results.services;
 
 import com.kaly7dev.results.dtos.ResultDto;
+import com.kaly7dev.results.entities.Result;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 
@@ -20,4 +23,6 @@ public interface ResultService {
                                       int weekNumber,
                                       int page,
                                       int size);
+
+    public Page<Result> selectSearchFunction(String desc, int weekNumber, Pageable paging);
 }

@@ -15,8 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.MultiValueMapAdapter;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,28 +36,36 @@ class ResultControllerRestAPiImplTest {
 
     @Test
     @DisplayName("Should list all results when making Get resquest to endpoint -" +
-            " /api/result/getlist/inflow={inflow}andfixedOutflow={fixedOutflow}\" ")
+            " /api/result/getlist/{inflow}and{fixedOutflow}")
     void testListResult() throws Exception{
         ResultDto resultDto1= new ResultDto(
-                1L, "test retrieve result1", BigDecimal.valueOf(1000), null,
+                1L, "result", BigDecimal.valueOf(1000), null,
                 null, false, 34, true);
         ResultDto resultDto2= new ResultDto(
-                2L, "test retrieve result2", BigDecimal.valueOf(1000), null,
-                null, false, 20, true);
+                2L, "result", BigDecimal.valueOf(1000), null,
+                null, false, 34, true);
 
-        Mockito.when(resultService.listResults(false, true))
-                .thenReturn(asList(resultDto1, resultDto2));
+        Map<String, Object> response= new HashMap<>();
+        response.put("results List", asList(resultDto1, resultDto2));
+        response.put("current Page", 0);
+        response.put("total Items", 2);
+        response.put("total Pages", 1);
 
-        mockMvc.perform(get("/api/result/getlist/inflow=falseandfixedOutflow=true"))
+        Mockito.when(resultService.listResults(false, true, "test retrieve result1",
+                        34, 0, 3))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/result/getlist/falseandtrue")
+                        .param("desc", "test retrieve result1")
+                        .param("weekNumber", "34")
+                        .param("page", "0")
+                        .param("size", "3"))
                 .andExpect(status().is(200))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.size()", Matchers.is(2)))
-                .andExpect(jsonPath("$[0].resultID", Matchers.is(1)))
-                .andExpect(jsonPath("$[0].description", Matchers.is("test retrieve result1")))
-                .andExpect(jsonPath("$[0].weekNumber", Matchers.is(34)))
-                .andExpect(jsonPath("$[1].resultID", Matchers.is(2)))
-                .andExpect(jsonPath("$[1].description", Matchers.is("test retrieve result2")))
-                .andExpect(jsonPath("$[1].weekNumber", Matchers.is(20)));
+                .andExpect(jsonPath("$.['results List'].size()", Matchers.is(2)))
+                .andExpect(jsonPath("$['results List'].[0].resultID", Matchers.is(1)))
+                .andExpect(jsonPath("$['results List'].[1].resultID", Matchers.is(2)));
+
 
     }
     @Test
