@@ -20,28 +20,28 @@ public class BalanceControllerRestAPiImpl implements BalanceController {
     private final BalanceService balanceService;
     @Override
     @PostMapping("/create")
-    public ResponseEntity<BalanceDto> createBalance(BalanceDto balanceDto) {
+    public ResponseEntity<BalanceDto> createBalance(@RequestBody BalanceDto balanceDto) {
         return status(CREATED)
                 .body(balanceService.createBalance(balanceDto));
     }
 
     @Override
     @PutMapping("/update")
-    public ResponseEntity<BalanceDto> updateBalance(BalanceDto balanceDto) {
+    public ResponseEntity<BalanceDto> updateBalance(@RequestBody BalanceDto balanceDto) {
         return status(OK)
                 .body(balanceService.updateBalance(balanceDto));
     }
 
     @Override
-    @DeleteMapping("/delete/{resultID}")
-    public ResponseEntity<String> deleteBalance(Long balanceID) {
+    @DeleteMapping("/delete/{balanceID}")
+    public ResponseEntity<String> deleteBalance(@PathVariable Long balanceID) {
         return status(OK)
                 .body(balanceService.deleteBalance(balanceID));
     }
 
     @Override
-    @GetMapping("/findbyid/{resultID}")
-    public ResponseEntity<BalanceDto> getBalanceById(Long balanceID) {
+    @GetMapping("/findbyid/{balanceID}")
+    public ResponseEntity<BalanceDto> getBalanceById(@PathVariable Long balanceID) {
         return status(HttpStatus.OK)
                 .body(balanceService.getBalanceById(balanceID));
     }
@@ -51,7 +51,7 @@ public class BalanceControllerRestAPiImpl implements BalanceController {
     public ResponseEntity<Map<String, Object>> listBalances(
             @PathVariable boolean assets,
             @RequestParam(required = false) String desc,
-            @RequestParam(required = false)double price,
+            @RequestParam(defaultValue = "0")double price,
             @RequestParam(defaultValue = "0")int page,
             @RequestParam(defaultValue = "3") int size) {
 

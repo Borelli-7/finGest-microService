@@ -11,7 +11,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="Results")
+@Table(name="Balances")
 @Builder
 public class Balance {
     @Id
