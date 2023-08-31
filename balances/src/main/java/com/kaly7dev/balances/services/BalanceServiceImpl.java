@@ -117,7 +117,7 @@ public class BalanceServiceImpl implements BalanceService {
                                               List<Balance> balanceList) {
         return (bDtoList, bPageList) -> {
             Map<String, Object> response = new HashMap<>();
-            response.put("results List", bDtoList.apply(assets, balanceList));
+            response.put("balances List", bDtoList.apply(assets, balanceList));
             response.put("current Page", bPageList.apply(desc, price, paging).getNumber());
             response.put("total Items", bPageList.apply(desc, price, paging).getTotalElements());
             response.put("total Pages", bPageList.apply(desc, price, paging).getTotalPages());
@@ -156,7 +156,7 @@ public class BalanceServiceImpl implements BalanceService {
         return assetsList;
     }
 
-    private TriFunction<String, Double, Pageable, Page<Balance>> getSearchFunction() {
+    public TriFunction<String, Double, Pageable, Page<Balance>> getSearchFunction() {
         return (bDesc, bPrice, pg)->{
             Page<Balance> pageBalanceLists;
             if ((bDesc != null) && (bPrice != 0) ){
