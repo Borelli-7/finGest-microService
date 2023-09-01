@@ -85,6 +85,15 @@ public class BalanceServiceImpl implements BalanceService {
         return getBalanceDto.apply(foundBalance);
     }
 
+    /**
+     * displays the list of assets or the list of liabilities, depending on the customer's requirements
+     * @param assets true for assets list and false for liabilities lists
+     * @param desc to display a list of balances with the same description.
+     * @param price to display the list of balances with the same price
+     * @param page to set the number of the first page
+     * @param size to set a number of items in a page
+     * @return Balances list paginated
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Object> listBalances(boolean assets,
@@ -107,7 +116,6 @@ public class BalanceServiceImpl implements BalanceService {
 
         return getBalancePaginated.apply(getBalanceTypeLists, getPageBalanceList);
     }
-
     private static BiFunction<BiFunction<Boolean, List<Balance>, List<BalanceDto>>,
             TriFunction<String, Double, Pageable, Page<Balance>>,
             Map<String, Object>> getPaginated(boolean assets,
@@ -127,6 +135,10 @@ public class BalanceServiceImpl implements BalanceService {
         };
     }
 
+    /**
+     * Select the type of balance to list ( a list of assets or liabilities )
+     * @return list of balance dto
+     */
     private BiFunction<Boolean, List<Balance>, List<BalanceDto>> getTypeLists() {
         return (bType, bList) -> {
             if (Boolean.TRUE.equals(bType)) {
@@ -136,7 +148,6 @@ public class BalanceServiceImpl implements BalanceService {
             }
         };
     }
-
     private List<BalanceDto> getDtosLiabilitiesList(List<Balance> bList) {
         List<BalanceDto> liabilitiesList= bList.parallelStream()
                 .filter(balance -> !balance.isAssets())
@@ -146,7 +157,6 @@ public class BalanceServiceImpl implements BalanceService {
         return liabilitiesList;
 
     }
-
     private List<BalanceDto> getDtosAssetsList(List<Balance> bList) {
         List<BalanceDto> assetsList= bList.parallelStream()
                 .filter(Balance::isAssets)
@@ -156,6 +166,10 @@ public class BalanceServiceImpl implements BalanceService {
         return assetsList;
     }
 
+    /**
+     * select the search function to be executed
+     * @return page of balance
+     */
     public TriFunction<String, Double, Pageable, Page<Balance>> getSearchFunction() {
         return (bDesc, bPrice, pg)->{
             Page<Balance> pageBalanceLists;
@@ -178,14 +192,12 @@ public class BalanceServiceImpl implements BalanceService {
             return pageBalanceLists;
         };
     }
-
     private Function<Long,Balance> findById(Long id) {
         Function<Long,Function<Long,Balance>> findById;
         findById = iD-> bId-> balanceRepo.findById(bId)
                 .orElseThrow(() -> new BalanceNotFoundException(ID_NOT_FOUND));
         return findById.apply(id);
     }
-
     private Function<Function<Long, Balance>, BalanceDto> getDto(Long balanceID) {
         return func -> {
             BalanceDto found = balanceMapper.mapToDto(func.apply(balanceID));
@@ -194,14 +206,12 @@ public class BalanceServiceImpl implements BalanceService {
             return found;
         };
     }
-
     private Function<Balance, BalanceDto> getSaveUpdatedBalance() {
         return balance ->
                 balanceMapper.mapToDto(
                         balanceRepo.save(balance)
                 );
     }
-
     private Function<Function<Long, Balance>, Balance> getUpdateFoundBalance(BalanceDto balanceDto) {
         return func-> {
             Balance found= func.apply(balanceDto.balanceID());
