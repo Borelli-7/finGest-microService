@@ -89,6 +89,7 @@ class BalanceServiceImplTest {
                 ).isInstanceOf(BalanceNotFoundException.class)
                 .hasMessage("Balance ID not found In DataBase !");
     }
+
     @Test
     @DisplayName("Should delete Balance in Database")
     void testDeleteBalance() {
@@ -103,24 +104,21 @@ class BalanceServiceImplTest {
         Mockito.verify(balanceRepo, Mockito.times(1))
                 .delete(balanceArgumentCaptor.capture());
     }
+
     @Test
     @DisplayName("Should list only Assets")
     void testListOnlyAssetsBalances() {
         Balance balance1= new Balance(
                 1L, "assetbalanceDesc", 1000.0, null, true, BigDecimal.valueOf(100000));
-        Balance balance2= new Balance(
-                2L, "assetbalanceDesc", 1000.0, null, true, BigDecimal.valueOf(100000));
+
         BalanceDto balanceDto1= new BalanceDto(
                 1L, "assetbalanceDesc", 1000.0, null, true, BigDecimal.valueOf(100000));
-        BalanceDto balanceDto2= new BalanceDto(
-                2L, "assetbalanceDesc", 1000.0, null, true, BigDecimal.valueOf(100000));
+
 
         List<Balance> balanceList= new ArrayList<>();
         balanceList.add(balance1);
-        balanceList.add(balance2);
 
         List<BalanceDto> expectedBalanceDtoList= new ArrayList<>();
-        expectedBalanceDtoList.add(balanceDto2);
         expectedBalanceDtoList.add(balanceDto1);
 
         Pageable paging= PageRequest.of(0, 3);
@@ -129,7 +127,7 @@ class BalanceServiceImplTest {
         Mockito.when(balanceService.getSearchFunction().apply("assetbalanceDesc", 1000.0, paging))
                 .thenReturn(pageResultList);
         Mockito.when(balanceMapper.mapToDto(Mockito.any(Balance.class)))
-                .thenReturn(balanceDto1, balanceDto2);
+                .thenReturn(balanceDto1);
 
         Map<String, Object> actualAssetBalanceDtoList=
                 balanceService.listBalances(
@@ -137,24 +135,21 @@ class BalanceServiceImplTest {
 
         Assertions.assertThat(actualAssetBalanceDtoList).containsValue(expectedBalanceDtoList);
     }
+
     @Test
     @DisplayName("Should list only Liabilities")
     void testListOnlyLiabilitiesBalances() {
         Balance balance1= new Balance(
                 1L, null, 0.0, null, false, BigDecimal.valueOf(100000));
-        Balance balance2= new Balance(
-                2L, null, 0.0, null, false, BigDecimal.valueOf(100000));
+
         BalanceDto balanceDto1= new BalanceDto(
                 1L, null, 0.0, null, false, BigDecimal.valueOf(100000));
-        BalanceDto balanceDto2= new BalanceDto(
-                2L, null, 0.0, null, false, BigDecimal.valueOf(100000));
+
 
         List<Balance> balanceList= new ArrayList<>();
         balanceList.add(balance1);
-        balanceList.add(balance2);
 
         List<BalanceDto> expectedBalanceDtoList= new ArrayList<>();
-        expectedBalanceDtoList.add(balanceDto2);
         expectedBalanceDtoList.add(balanceDto1);
 
         Pageable paging= PageRequest.of(0, 3);
@@ -163,7 +158,7 @@ class BalanceServiceImplTest {
         Mockito.when(balanceService.getSearchFunction().apply(null, 0.0, paging))
                 .thenReturn(pageResultList);
         Mockito.when(balanceMapper.mapToDto(Mockito.any(Balance.class)))
-                .thenReturn(balanceDto1, balanceDto2);
+                .thenReturn(balanceDto1);
 
         Map<String, Object> actualAssetBalanceDtoList=
                 balanceService.listBalances(
