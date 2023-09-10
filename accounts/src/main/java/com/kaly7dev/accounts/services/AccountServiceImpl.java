@@ -22,41 +22,54 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepo accountRepo;
     private final AccountMapper accountMapper;
-    public static final String ACCOUNT_LIST_DB_SUCCESS= "Accounts list in DB successfully";
+    public static final String ACCOUNT_LIST_DB_SUCCESS= "Accounts list in DataBase successfully";
 
     @Override
     @Transactional
     public void initializeAccounts(AccountRepo accountRepo) {
         List<String> accountName=
-                List.of("Finances", "Savings", "Training", "Basic", "Leisure", "Gifts");
+                List.of("Finances", "Savings", "Trainings", "Basics", "Leisure", "Gifts");
         Account account= new Account();
 
         List<Account> accountBackupList= accountRepo.findAll();
         if (accountBackupList.isEmpty()) {
-            for (String accN : accountName) {
-                account.setAccountId(UUID.randomUUID().toString());
-                account.setName(accN);
-                int percent = switch (account.getName()) {
-                    case "Finances", "Trainings" -> 10;
-                    case "Leisure", "Gifts" -> 5;
-                    case "Savings" -> 15;
-                    case "Basics" -> 55;
-                    default -> throw new IllegalStateException("Unexpected value: " + account.getName());
-                };
-                account.setPercentage(percent);
-                accountRepo.save(account);
-            }
+            initializeAccountList(accountRepo, accountName, account);
 
             log.info(ACCOUNT_LIST_DB_SUCCESS+" Initialized ! ");
 
         }else if (accountBackupList.size() == 6){
-            accountRepo.deleteAll();
-            accountRepo.saveAll(accountBackupList);
-
-            log.info(ACCOUNT_LIST_DB_SUCCESS+" Restored ! ");
+            restoreAccountList(accountBackupList);
 
         }else {
-            throw new AccountServiceException("Account List's Size in DB is Not Equals to 6 !");
+            throw new AccountServiceException("Account List Exist in DataBase, But The Size is Not Equals to 6 !");
+        }
+    }
+
+    private static void restoreAccountList(List<Account> accountBackupList) {
+        var sum= accountBackupList.stream()
+                .mapToInt(Account::getPercentage).sum();
+
+        if (sum == 100) {
+            log.info(ACCOUNT_LIST_DB_SUCCESS+" Restored ! ");
+        }else{
+            throw new AccountServiceException(
+                    "The 6 Accounts Exist In DataBase, But The Sum of Their Percentage NoT Equal to 100 !");
+        }
+    }
+
+    private static void initializeAccountList(AccountRepo accountRepo, List<String> accountName, Account account) {
+        for (String accN : accountName) {
+            account.setAccountId(UUID.randomUUID().toString());
+            account.setName(accN);
+            int percent = switch (account.getName()) {
+                case "Finances", "Trainings" -> 10;
+                case "Leisure", "Gifts" -> 5;
+                case "Savings" -> 15;
+                case "Basics" -> 55;
+                default -> throw new IllegalStateException("Unexpected Account name: " + account.getName());
+            };
+            account.setPercentage(percent);
+            accountRepo.save(account);
         }
     }
 
@@ -98,7 +111,7 @@ public class AccountServiceImpl implements AccountService {
 
             if (accToEdit.isEmpty()) {
                 throw new AccountNotFoundException(
-                        String.format("Account With Name: %s Not Found !", accDtoSl.name()));
+                        String.format( "Account With Name: %s Not Found !", accDtoSl.name()));
             }
             if(Objects.equals(accToEdit.orElseThrow().getPercentage(), accDtoSl.percentage())){
                 throw new AccountServiceException(
