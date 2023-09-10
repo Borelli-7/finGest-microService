@@ -39,7 +39,10 @@ public class AccountServiceImpl implements AccountService {
 
         }else if (accountBackupList.size() == 6){
             restoreAccountList(accountBackupList);
-
+        /*
+        the number of accounts in the database must be no more than 6,
+         because money is managed according to the 6 Account Strategy principle.
+         */
         }else {
             throw new AccountServiceException("Account List Exist in DataBase, But The Size is Not Equals to 6 !");
         }
@@ -128,6 +131,10 @@ public class AccountServiceImpl implements AccountService {
         var sum= accountsFromDB.stream()
                     .mapToInt(Account::getPercentage).sum();
 
+        /*
+         * the sum of the percentages of the 6 accounts must equal 100.
+         * in order to respect the principle of the 6-account strategy in money management.
+         */
         if (sum != 100) {
             throw new AccountServiceException("The sum of All Accounts percentage must be equal to 100 !");
         }else {
