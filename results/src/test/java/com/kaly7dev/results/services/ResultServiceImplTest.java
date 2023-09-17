@@ -64,7 +64,7 @@ class ResultServiceImplTest {
                 .save(resultArgumentCaptor.capture());
 
         Assertions.assertThat(resultArgumentCaptor.getValue().getResultID()).isEqualTo(1L);
-        Assertions.assertThat(resultArgumentCaptor.getValue().getWeekNumber()).isEqualTo(34);
+        Assertions.assertThat(resultArgumentCaptor.getValue().getDescription()).isEqualTo("test create result");
     }
 
     @Test
