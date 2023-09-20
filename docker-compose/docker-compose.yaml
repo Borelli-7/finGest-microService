@@ -3,16 +3,16 @@ services:
     container_name: MM_user_notif_mariadb_db
     image: 'mariadb:latest'
     environment:
-      - 'MARIADB_DATABASE=user_notif_db'
-      - 'MARIADB_USER=springboot'
-      - 'MARIADB_PASSWORD=maria'
+      - 'MARIADB_DATABASE=${MARIADB_DATABASE:-user_notif_db}'
+      - 'MARIADB_USER=${MARIADB_USER:-springboot}'
+      - 'MARIADB_PASSWORD=${MARIADB_PASSWORD:-maria}'
     networks:
       backend:
         aliases:
           - 'MM_MariaDB'
     restart: unless-stopped
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password $$MARIADB_PASSWORD
+      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,16 +79,16 @@ services:
     container_name: MM_account_mongodb_db
     image: 'mongodb/mongodb-community-server:latest'
     environment:
-      - 'MONGODB_INITDB_DATABASE=account_db'
-      - 'MONGODB_INITDB_ROOT_USERNAME=springboot'
-      - 'MONGODB_INITDB_ROOT_PASSWORD=mongo'
+      - 'MONGODB_INITDB_DATABASE=${MONGODB_INITDB_DATABASE:-account_db}'
+      - 'MONGODB_INITDB_ROOT_USERNAME=${MONGODB_INITDB_ROOT_USERNAME:-springboot}'
+      - 'MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_INITDB_ROOT_PASSWORD:-mongo}'
     networks:
       backend:
         aliases:
           - 'MongoDB'
     restart: unless-stopped
     healthcheck:
-      test: echo 'db.stats().ok' | mongo localhost:27017/account_db --quiet
+      test:  echo 'db.runCommand("ping").ok' | mongosh --authenticationDatabase admin localhost:27017/test --quiet
       interval: 10s
       timeout: 10s
       retries: 5
