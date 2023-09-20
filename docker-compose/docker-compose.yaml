@@ -1,26 +1,101 @@
 services:
   mariadb:
+    container_name: MM_user_notif_mariadb_db
     image: 'mariadb:latest'
     environment:
-      - 'MARIADB_DATABASE=mydatabase'
-      - 'MARIADB_PASSWORD=secret'
-      - 'MARIADB_ROOT_PASSWORD=verysecret'
-      - 'MARIADB_USER=myuser'
+      - 'MARIADB_DATABASE=user_notif_db'
+      - 'MARIADB_USER=springboot'
+      - 'MARIADB_PASSWORD=maria'
+    networks:
+      backend:
+        aliases:
+          - 'MM_MariaDB'
+    restart: unless-stopped
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password $$MARIADB_PASSWORD
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
-      - '3306'
-  mongodb:
-    image: 'mongo:latest'
+      - '3306:3306'
+
+  mysql-workbench:
+    image: 'linuxserver/mysql-workbench'
+    container_name: mysql-workbench
     environment:
-      - 'MONGO_INITDB_DATABASE=mydatabase'
-      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-      - 'MONGO_INITDB_ROOT_USERNAME=root'
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /path/to/config:/config
     ports:
-      - '27017'
+      - 3000:3000
+      - 3001:3001
+    cap_add:
+      - IPC_LOCK
+    restart: unless-stopped
+    networks:
+      backend:
+        aliases:
+          - 'Workbench'
+
   postgres:
+    container_name: MM_result_balance_postgresql_db
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_DB=${POSTGRES_DB:-result_balance_db}'
+      - 'POSTGRES_USER=${POSTGRES_USER:-springboot}'
+      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}'
+      - 'PGDATA:/data/postgres'
+    networks:
+      backend:
+        aliases:
+            - 'MM_PostgresDB'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d result_balance_db -U springboot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
-      - '5432'
+      - '5432:5432'
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+    networks:
+      backend:
+        aliases:
+            - 'PgAdmin'
+    restart: unless-stopped
+    ports:
+      - '${PGADMIN_PORT:-5050}:80'
+
+  mongodb:
+    container_name: MM_account_mongodb_db
+    image: 'mongodb/mongodb-community-server:latest'
+    environment:
+      - 'MONGODB_INITDB_DATABASE=account_db'
+      - 'MONGODB_INITDB_ROOT_USERNAME=springboot'
+      - 'MONGODB_INITDB_ROOT_PASSWORD=mongo'
+    networks:
+      backend:
+        aliases:
+          - 'MongoDB'
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/account_db --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    ports:
+      - '27017:27017'
+
+networks:
+  backend:
+    driver: bridge
