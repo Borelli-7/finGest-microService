@@ -3,13 +3,9 @@ services:
     container_name: MM_user_notif_mariadb_db
     image: 'mariadb:latest'
     environment:
-      - 'MARIADB_DATABASE=${MARIADB_DATABASE:-user_notif_db}'
-      - 'MARIADB_USER=${MARIADB_USER:-springboot}'
-      - 'MARIADB_PASSWORD=${MARIADB_PASSWORD:-maria}'
-    networks:
-      backend:
-        aliases:
-          - 'MM_MariaDB'
+      - 'MARIADB_DATABASE=${MARIADB_DATABASE}'
+      - 'MARIADB_USER=${MARIADB_USER}'
+      - 'MARIADB_PASSWORD=${MARIADB_PASSWORD}'
     restart: unless-stopped
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
@@ -17,10 +13,14 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - '3306:3306'
+      - '${MARIADB_PORT}:${MARIADB_PORT}'
+    networks:
+      backend:
+        aliases:
+          - 'MM_MariaDB'
 
   mysql-workbench:
-    image: 'linuxserver/mysql-workbench'
+    image: 'linuxserver/mysql-workbench:latest'
     container_name: mysql-workbench
     environment:
       - PUID=1000
@@ -43,49 +43,44 @@ services:
     container_name: MM_result_balance_postgresql_db
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=${POSTGRES_DB:-result_balance_db}'
-      - 'POSTGRES_USER=${POSTGRES_USER:-springboot}'
-      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}'
+      - 'POSTGRES_DB=${POSTGRES_DB}'
+      - 'POSTGRES_USER=${POSTGRES_USER}'
+      - 'POSTGRES_PASSWORD=${POSTGRES_PASSWORD}'
       - 'PGDATA:/data/postgres'
-    networks:
-      backend:
-        aliases:
-            - 'MM_PostgresDB'
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d result_balance_db -U springboot"]
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - '5432:5432'
-
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     networks:
       backend:
         aliases:
-            - 'PgAdmin'
+            - 'MM_PostgresDB'
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: 'dpage/pgadmin4:latest'
+    environment:
+      - 'PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}'
+      - 'PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW}'
     restart: unless-stopped
     ports:
       - '${PGADMIN_PORT:-5050}:80'
+    networks:
+      backend:
+        aliases:
+          - 'PgAdmin'
 
   mongodb:
     container_name: MM_account_mongodb_db
     image: 'mongodb/mongodb-community-server:latest'
     environment:
-      - 'MONGODB_INITDB_DATABASE=${MONGODB_INITDB_DATABASE:-account_db}'
-      - 'MONGODB_INITDB_ROOT_USERNAME=${MONGODB_INITDB_ROOT_USERNAME:-springboot}'
-      - 'MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_INITDB_ROOT_PASSWORD:-mongo}'
-    networks:
-      backend:
-        aliases:
-          - 'MongoDB'
+      - 'MONGODB_INITDB_DATABASE=${MONGODB_DATABASE}'
+      - 'MONGODB_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}'
+      - 'MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}'
     restart: unless-stopped
     healthcheck:
       test:  echo 'db.runCommand("ping").ok' | mongosh --authenticationDatabase admin localhost:27017/test --quiet
@@ -94,8 +89,99 @@ services:
       retries: 5
       start_period: 40s
     ports:
-      - '27017:27017'
+      - '${MONGODB_PORT}:${MONGODB_PORT}'
+    networks:
+      backend:
+        aliases:
+          - 'MongoDB'
 
+  configserver:
+    container_name: MM_configserver
+    image: manage-money/configserver:0.0.1-SNAPSHOT
+    ports:
+      - '${CONFIG_SERVER_PORT}:${CONFIG_SERVER_PORT}'
+    environment:
+      ENCRYPT_KEY: "fje83Ki8403Iod87dne7Yjsl3THueh48jfuO9j4U2hf64Lo"
+    networks:
+      backend:
+        aliases:
+          - 'configserver'
+
+  balanceservice:
+    container_name: MM_balance_service
+    image: manage-money/balances:0.0.1-SNAPSHOT
+    environment:
+      PROFILE: "${PROFILE}"
+      CONFIGSERVER_URI: "${CONFIG_SERVER_URI}"
+      CONFIGSERVER_PORT: "${CONFIG_SERVER_PORT}"
+      DATABASESERVER_PORT: "${POSTGRES_PORT}"
+      ENCRYPT_KEY: "${ENCRYPT_KEY}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - "${BALANCE_SERVICE_PORT}:${BALANCE_SERVICE_PORT}"
+    networks:
+      - 'backend'
+
+  resultservice:
+    container_name: MM_result_service
+    image: manage-money/results:0.0.1-SNAPSHOT
+    environment:
+      PROFILE: "${PROFILE}"
+      CONFIGSERVER_URI: "${CONFIG_SERVER_URI}"
+      CONFIGSERVER_PORT: "${CONFIG_SERVER_PORT}"
+      DATABASESERVER_PORT: "${POSTGRES_PORT}"
+      ENCRYPT_KEY: "${ENCRYPT_KEY}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - "${RESULT_SERVICE_PORT}:${RESULT_SERVICE_PORT}"
+    networks:
+      - 'backend'
+
+  accountservice:
+    container_name: MM_account_service
+    image: manage-money/accounts:0.0.1-SNAPSHOT
+    environment:
+      PROFILE: "${PROFILE}"
+      CONFIGSERVER_URI: "${CONFIG_SERVER_URI}"
+      CONFIGSERVER_PORT: "${CONFIG_SERVER_PORT}"
+      DATABASESERVER_PORT: "${MONGODB_PORT}"
+      ENCRYPT_KEY: "${ENCRYPT_KEY}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - '${ACCOUNT_SERVICE_PORT}:${ACCOUNT_SERVICE_PORT}'
+    networks:
+      - 'backend'
+
+  notificationservice:
+    container_name: MM_notification_service
+    image: manage-money/notification:0.0.1-SNAPSHOT
+    environment:
+      PROFILE: "${PROFILE}"
+      CONFIGSERVER_URI: "${CONFIG_SERVER_URI}"
+      CONFIGSERVER_PORT: "${CONFIG_SERVER_PORT}"
+      DATABASESERVER_PORT: "${MARIADB_PORT}"
+      ENCRYPT_KEY: "${ENCRYPT_KEY}"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - '${NOTIFICATION_SERVICE_PORT}:${NOTIFICATION_SERVICE_PORT}'
+    networks:
+      - 'backend'
 networks:
   backend:
     driver: bridge
