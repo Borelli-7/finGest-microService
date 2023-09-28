@@ -12,6 +12,7 @@ import javax.security.auth.login.AccountNotFoundException;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.ResponseEntity.status;
 
@@ -23,21 +24,28 @@ public class AccountControllerRestApiImpl implements AccountController {
     private final AccountService accountService;
 
     @Override
+    @PostMapping("/initialize")
+    public ResponseEntity<String> initializeAccountsUser() {
+        accountService.initializeAccountsUser();
+        return new ResponseEntity<>(CREATED);
+    }
+
+    @Override
     @PutMapping("/updatelist")
-    public ResponseEntity<List<AccountDtoSilm>> updateAccountList(
+    public ResponseEntity<List<AccountDtoSilm>> updateAccountListUser(
             @RequestBody AccountDtoSilm... accountDtoSlimList
     ) throws AccountNotFoundException {
 
         return status(OK)
-                .body(accountService.updateAccountList(accountDtoSlimList));
+                .body(accountService.updateAccountListUser(accountDtoSlimList));
     }
 
     @Override
     @GetMapping("/listall")
-    public ResponseEntity<List<AccountDto>> accountsList() {
+    public ResponseEntity<List<AccountDto>> accountsListUser() {
 
         return status(OK)
-                .body(accountService.accountsList());
+                .body(accountService.accountsListUser());
     }
 
     @ExceptionHandler(Exception.class)

@@ -10,6 +10,7 @@ public record AccountDto(
          Instant updatedDate,
          BigDecimal debitedAmount,
          BigDecimal creditedAmount,
-         Integer monthNumber
+         Integer monthNumber,
+         String accDTo_userID
 ) {
 }

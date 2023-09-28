@@ -4,6 +4,8 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.kaly7dev.accounts.models.User;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 @Document(value = "accounts")
@@ -21,4 +23,5 @@ public class Account {
     private BigDecimal debitedAmount;
     private BigDecimal creditedAmount;
     private Integer monthNumber;
+    private User owner;
 }

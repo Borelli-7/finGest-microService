@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface AccountController {
 
-    ResponseEntity<List<AccountDtoSilm>> updateAccountList(AccountDtoSilm... accountDtoSlimList) throws AccountNotFoundException;
-    ResponseEntity<List<AccountDto>> accountsList();
+    ResponseEntity<String>  initializeAccountsUser();
+    ResponseEntity<List<AccountDtoSilm>> updateAccountListUser(AccountDtoSilm... accountDtoSlimList) throws AccountNotFoundException;
+    ResponseEntity<List<AccountDto>> accountsListUser();
 }

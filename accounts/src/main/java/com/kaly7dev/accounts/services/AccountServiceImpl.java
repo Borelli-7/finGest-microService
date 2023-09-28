@@ -5,9 +5,12 @@ import com.kaly7dev.accounts.dtos.AccountDtoSilm;
 import com.kaly7dev.accounts.entities.Account;
 import com.kaly7dev.accounts.exceptions.AccountServiceException;
 import com.kaly7dev.accounts.mappers.AccountMapper;
+import com.kaly7dev.accounts.models.User;
 import com.kaly7dev.accounts.repositories.AccountRepo;
+import com.kaly7dev.accounts.repositories.UserRepo;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,49 +21,68 @@ import java.util.*;
 @Service
 @AllArgsConstructor
 @Slf4j
+@Primary
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepo accountRepo;
+    private final UserRepo userRepo;
     private final AccountMapper accountMapper;
-    public static final String ACCOUNT_LIST_DB_SUCCESS= "Accounts list in DataBase successfully";
+
+    private static final String ACCOUNT_LIST_DB_SUCCESS= "Accounts list in DataBase successfully";
+
+    private static final String ACC_USER_ID= "2";
 
     @Override
     @Transactional
-    public void initializeAccounts(AccountRepo accountRepo) {
-        List<String> accountName=
+    public void initializeAccountsUser() {
+        List<String> accountNameList =
                 List.of("Finances", "Savings", "Trainings", "Basics", "Leisure", "Gifts");
         Account account= new Account();
+        User userChecked= checkUser(ACC_USER_ID);
+        log.info(String.format("User: %s  Successfully Checked ", userChecked.getFirstName()));
 
-        List<Account> accountBackupList= accountRepo.findAll();
-        if (accountBackupList.isEmpty()) {
-            initializeAccountList(accountRepo, accountName, account);
 
-            log.info(ACCOUNT_LIST_DB_SUCCESS+" Initialized ! ");
+        List<Account> accountsUser=accountRepo
+                .findAllByOwner(userChecked);
 
-        }else if (accountBackupList.size() == 6){
-            restoreAccountList(accountBackupList);
-        /*
-        the number of accounts in the database must be no more than 6,
-         because money is managed according to the 6 Account Strategy principle.
-         */
-        }else {
-            throw new AccountServiceException("Account List Exist in DataBase, But The Size is Not Equals to 6 !");
+        if (accountsUser.isEmpty()) {
+            initializeAccountList(accountRepo, accountNameList, account, userChecked);
+            log.info(String.format(ACCOUNT_LIST_DB_SUCCESS + " Initialized for User: %s !", userChecked.getFirstName()));
+        } else {
+            checkTotalPercentageAccountsUserFromDB(accountsUser, userChecked);
         }
     }
+    private void checkTotalPercentageAccountsUserFromDB(
+            List<Account> accountsFromDB,
+            User owner) {
 
-    private static void restoreAccountList(List<Account> accountBackupList) {
-        var sum= accountBackupList.stream()
+        var sum= accountsFromDB.stream()
                 .mapToInt(Account::getPercentage).sum();
 
-        if (sum == 100) {
-            log.info(ACCOUNT_LIST_DB_SUCCESS+" Restored ! ");
-        }else{
+        /*
+         * the sum of the percentages of the 6 accounts must equal 100.
+         * in order to respect the principle of the 6-account strategy in money management.
+         */
+        if (sum != 100) {
             throw new AccountServiceException(
-                    "The 6 Accounts Exist In DataBase, But The Sum of Their Percentage NoT Equal to 100 !");
+                    String.format("The sum of All Accounts percentage for User: %S" +
+                            " is Not equal to 100 !",owner.getFirstName()));
+        }else {
+            log.info("User: {}'s accounts have already been initialized !", owner.getFirstName());
         }
     }
 
-    private static void initializeAccountList(AccountRepo accountRepo, List<String> accountName, Account account) {
+    private User checkUser(String userId) {
+        return userRepo.findById(userId)
+                .orElseThrow(()-> new RuntimeException(
+                        String.format("User ID: %s Not Exist In DataBase ! ",userId)));
+    }
+
+    private static void initializeAccountList(AccountRepo accountRepo,
+                                              List<String> accountName,
+                                              Account account,
+                                              User owner) {
+
         for (String accN : accountName) {
             account.setAccountId(UUID.randomUUID().toString());
             account.setName(accN);
@@ -72,19 +94,22 @@ public class AccountServiceImpl implements AccountService {
                 default -> throw new IllegalStateException("Unexpected Account name: " + account.getName());
             };
             account.setPercentage(percent);
+            account.setOwner(owner);
+
             accountRepo.save(account);
         }
     }
 
     @Override
     @Transactional
-    public List<AccountDtoSilm> updateAccountList(AccountDtoSilm... accountDtoSlimList) throws AccountNotFoundException {
-        List<Account> accountsFromDB= accountRepo.findAll();
+    public List<AccountDtoSilm> updateAccountListUser(AccountDtoSilm...accountDtoSlimList) throws AccountNotFoundException {
+        User userChecked= checkUser(ACC_USER_ID);
+        List<Account> accountsUserFromDB = accountRepo.findAllByOwner(userChecked);
 
-        checkIfAccountNameExistInDB(accountDtoSlimList);
+        checkIfAccountNameExistInDB(accountDtoSlimList, userChecked);
 
         for (var accDtoSl :accountDtoSlimList) {
-            for (var account : accountsFromDB) {
+            for (var account : accountsUserFromDB) {
                 if (account.getName().equals(accDtoSl.name())) {
                     account.setPercentage(accDtoSl.percentage());
 
@@ -93,14 +118,17 @@ public class AccountServiceImpl implements AccountService {
             }
         }
 
-        return checkTotalPercentageAccounts(accountsFromDB, accountDtoSlimList);
+        return checkTotalPercentageAccountsUserFromClient(accountsUserFromDB, accountDtoSlimList, userChecked);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AccountDto> accountsList() {
+    public List<AccountDto> accountsListUser() {
+        User userChecked= checkUser(ACC_USER_ID);
+
         List<AccountDto> accountDtoList= new ArrayList<>();
-        List<Account> accountList= accountRepo.findAll();
+        List<Account> accountList= accountRepo.findAllByOwner(userChecked);
+
 
         accountList.forEach( acc -> accountDtoList.add( accountMapper.mapToDto(acc)));
 
@@ -108,9 +136,13 @@ public class AccountServiceImpl implements AccountService {
         return accountDtoList;
     }
 
-    private void checkIfAccountNameExistInDB(AccountDtoSilm[] accountDtoSlimList) throws AccountNotFoundException {
+    private void checkIfAccountNameExistInDB(
+            AccountDtoSilm[] accountDtoSlimList,
+            User userChecked) throws AccountNotFoundException {
+
         for (var accDtoSl : accountDtoSlimList) {
-            Optional<Account> accToEdit = accountRepo.findByName(accDtoSl.name());
+            Optional<Account> accToEdit = accountRepo.findByNameAndOwner_UserID(
+                    accDtoSl.name(), userChecked.getUserID());
 
             if (accToEdit.isEmpty()) {
                 throw new AccountNotFoundException(
@@ -123,9 +155,10 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
-    private List<AccountDtoSilm> checkTotalPercentageAccounts(
+    private List<AccountDtoSilm> checkTotalPercentageAccountsUserFromClient(
             List<Account> accountsFromDB,
-            AccountDtoSilm[] accountDtoSlimList) {
+            AccountDtoSilm[] accountDtoSlimList,
+            User userChecked) {
         List<AccountDtoSilm> response= new ArrayList<>();
 
         var sum= accountsFromDB.stream()
@@ -136,7 +169,9 @@ public class AccountServiceImpl implements AccountService {
          * in order to respect the principle of the 6-account strategy in money management.
          */
         if (sum != 100) {
-            throw new AccountServiceException("The sum of All Accounts percentage must be equal to 100 !");
+            throw new AccountServiceException(
+                    String.format("The sum of All Accounts percentage for User: %s" +
+                            " must be equal to 100 !", userChecked.getFirstName()));
         }else {
             for (var accDtoSl : accountDtoSlimList) {
                 for (var account : accountsFromDB) {
